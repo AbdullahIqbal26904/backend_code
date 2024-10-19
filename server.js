@@ -10,6 +10,7 @@ const secret_key = 'sdf$92jsL9sN2%@0J!sdf0LKsm93#asF8!';
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
+require('dotenv').config();
 
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -24,10 +25,10 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 const db = mysql.createConnection({
-  host: 'localhost',
-  user: 'root',
-  password: '12345678',
-  database: 'ECOMMERCE_PROJECT',
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
 });
 
 // Connect to MySQL
@@ -658,7 +659,7 @@ app.put('/updateProduct',(req,res) => {
   })
 })
 
-const PORT = 3002;
-app.listen(PORT, () => {
-  console.log(`Server running on port http://localhost:3002`);
+const port = process.env.PORT;
+app.listen(port, () => {
+  console.log(`Server running on port http://localhost:${port}`);
 });
