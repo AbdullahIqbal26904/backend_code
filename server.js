@@ -34,7 +34,7 @@ const dbConfig = {
 let db; // Declare db variable globally
 
 function handleDisconnect() {
-  db = mysql.createConnection(dbConfig); // Recreate the connection
+  handleDisconnect();
   try{
     console.log('MySql Successfully Connected....');
   }catch(err){
@@ -46,7 +46,7 @@ function handleDisconnect() {
 handleDisconnect();
 
 app.get('/data', (req, res) => {
-  db = mysql.createConnection(dbConfig); // Recreate the connection
+  handleDisconnect();
   let sql = 'SELECT * FROM users';
   db.query(sql, (err, result) => {
     if (err) throw err;
@@ -55,7 +55,7 @@ app.get('/data', (req, res) => {
 });
 
 app.post('/products', upload.single('imgdata'), (req, res) => {
-  db = mysql.createConnection(dbConfig); // Recreate the connection
+  handleDisconnect();
   let addProdquery = ``;
   const { name, description, category, price, ratings, qnty, imgdata, imageUrl } = req.body;
   if (imageUrl == "") {
@@ -83,7 +83,7 @@ app.post('/products', upload.single('imgdata'), (req, res) => {
 });
 
 app.post('/signup', async (req, res) => {
-  db = mysql.createConnection(dbConfig); // Recreate the connection
+  handleDisconnect();
   const { name, email, password, Customer } = req.body;
   let select = 'SELECT * FROM users WHERE Email = ?';
   db.query(select, [email], async (err, result) => {
@@ -103,7 +103,7 @@ app.post('/signup', async (req, res) => {
   });
 });
 app.post('/login', (req, res) => {
-  db = mysql.createConnection(dbConfig); // Recreate the connection
+  handleDisconnect();
   const { email, password } = req.body;
   const query2 = 'SELECT * FROM users WHERE Email = ?';
   db.query(query2, [email], (err, result) => {
@@ -149,7 +149,7 @@ app.post('/login', (req, res) => {
 //   });
 // });
 app.post('/createCart', (req, res) => {
-  db = mysql.createConnection(dbConfig); // Recreate the connection
+  handleDisconnect();
   const { created_date, created_time, id } = req.body;
   const checkCartQuery = 'SELECT * FROM Cart WHERE id = ?';
   db.query(checkCartQuery, [id], (err, existingCart) => {
@@ -176,7 +176,7 @@ app.post('/createCart', (req, res) => {
 });
 
 app.post("/addtocart", (req, res) => {
-  db = mysql.createConnection(dbConfig); // Recreate the connection
+  handleDisconnect();
   const { cart_id, product_id, quantity, price } = req.body;
   const isproductinstock = `SELECT qnty FROM PRODUCTS WHERE id = ? AND qnty > 0`;
   db.query(isproductinstock, [product_id], (err, result) => {
@@ -216,7 +216,7 @@ app.post("/addtocart", (req, res) => {
 })
 
 app.get("/getcartdata", (req, res) => {
-  db = mysql.createConnection(dbConfig); // Recreate the connection
+  handleDisconnect();
   const { cart_id } = req.query;
   const get_query = `SELECT P.*,ci.quantity FROM PRODUCTS P JOIN cartItems ci ON P.id = ci.id JOIN Cart C ON C.cart_id = ci.cart_id WHERE C.cart_id = ?`;
   console.log("fetching data of cart: ", cart_id);
@@ -230,7 +230,7 @@ app.get("/getcartdata", (req, res) => {
 })
 
 app.get(`/getcarttotal`, (req, res) => {
-  db = mysql.createConnection(dbConfig); // Recreate the connection
+  handleDisconnect();
   const { cart_id2 } = req.query;
   const get_cart_total = `select sum(ci.total_item_price) as total from cartItems ci inner join Cart c on ci.cart_id = c.cart_id where c.cart_id = ?`
   db.query(get_cart_total, [cart_id2], (err, result) => {
@@ -243,7 +243,7 @@ app.get(`/getcarttotal`, (req, res) => {
 })
 
 app.put("/updatequantity", (req, res) => {
-  db = mysql.createConnection(dbConfig); // Recreate the connection
+  handleDisconnect();
   const { qnty_fr_db, prod_id, cart_id, prod_price } = req.body;
   const update = `UPDATE cartItems set quantity = quantity + (?),total_item_price = (quantity * ?) where id=? AND cart_id = ?`;
   db.query(update, [qnty_fr_db, prod_price, prod_id, cart_id], (err, result) => {
@@ -256,7 +256,7 @@ app.put("/updatequantity", (req, res) => {
 })
 //For Order placement
 app.put('/createOrder', (req, res) => {
-  db = mysql.createConnection(dbConfig); // Recreate the connection
+  handleDisconnect();
   const { date, time, total, status, id } = req.body;
   const makeOrder = `INSERT INTO Orders(order_Date,order_Time,total_amount,order_status,id) VALUES(?,?,?,?,?)`;
   console.log('order making.............');
@@ -274,7 +274,7 @@ app.put('/createOrder', (req, res) => {
 })
 
 app.put('/deliveryinfo', (req, res) => {
-  db = mysql.createConnection(dbConfig); // Recreate the connection
+  handleDisconnect();
   const { email, address, city, paymentmethod, postalcode, phoneno, userid } = req.body;
 
   // SQL query to check if delivery info already exists
@@ -311,7 +311,7 @@ app.put('/deliveryinfo', (req, res) => {
 
 
 app.put('/deliveryOrder', (req, res) => {
-  db = mysql.createConnection(dbConfig); // Recreate the connection
+  handleDisconnect();
   const { deliver_yid, ordera_id } = req.body;
   const insertindeliveryorder = `INSERT INTO deliveryOrder (delivery_id,order_id) VALUES (?,?)`;
   db.query(insertindeliveryorder, [deliver_yid, ordera_id], (err, result) => {
@@ -327,7 +327,7 @@ app.put('/deliveryOrder', (req, res) => {
 })
 
 app.put('/orderproductstable', (req, res) => {
-  db = mysql.createConnection(dbConfig); // Recreate the connection
+  handleDisconnect();
   const { prod_id, orderrrid, quantity } = req.body;
   const addtoorderproducts = `INSERT INTO orderProducts (id,order_id,quantity) VALUES(?,?,?)`;
   console.log('prod_id', prod_id, 'orderid', orderrrid);
@@ -343,7 +343,7 @@ app.put('/orderproductstable', (req, res) => {
 })
 
 app.delete('/emptycart', (req, res) => {
-  db = mysql.createConnection(dbConfig); // Recreate the connection
+  handleDisconnect();
   const { useraid } = req.body; // Should match what you're sending from the client
 
   if (!useraid) {
@@ -370,7 +370,7 @@ app.delete('/emptycart', (req, res) => {
 });
 
 app.put('/updatestock', (req, res) => {
-  db = mysql.createConnection(dbConfig); // Recreate the connection
+  handleDisconnect();
   const { productid, productquantity } = req.body;
   const updatestock = `UPDATE PRODUCTS SET qnty = qnty - ? WHERE id = ?`;
   db.query(updatestock, [productquantity, productid], (err, result) => {
@@ -386,7 +386,7 @@ app.put('/updatestock', (req, res) => {
 
 // Order placement ends here
 app.get('/getCart/:id', (req, res) => {
-  db = mysql.createConnection(dbConfig); // Recreate the connection
+  handleDisconnect();
   const userId = req.params.id;
 
   // Query to fetch the cart for the given user ID
@@ -410,7 +410,7 @@ app.get('/getCart/:id', (req, res) => {
 );
 
 app.get('/productsbyrange', async (req, res) => {
-  db = mysql.createConnection(dbConfig); // Recreate the connection
+  handleDisconnect();
   const { minPrice, maxPrice } = req.query;
   const query_get = `SELECT * FROM PRODUCTS WHERE price >= ? AND price <= ?`;
   console.log('minprice: ', minPrice, ' maxprice: ', maxPrice);
@@ -425,7 +425,7 @@ app.get('/productsbyrange', async (req, res) => {
 })
 
 app.get('/getproducts', (req, res) => {
-  db = mysql.createConnection(dbConfig); // Recreate the connection
+  handleDisconnect();
   const query = 'SELECT * FROM `PRODUCTS`';
 
   db.query(query, (err, result) => {
@@ -437,7 +437,7 @@ app.get('/getproducts', (req, res) => {
 });
 
 app.get('/getproductsforeditordelete', (req, res) => {
-  db = mysql.createConnection(dbConfig); // Recreate the connection
+  handleDisconnect();
   const { name } = req.query;
 
   if (!name) {
@@ -462,7 +462,7 @@ app.get('/getproductsforeditordelete', (req, res) => {
 
 //for admin page 
 app.get('/getproductsforeditordeletebycategory', (req, res) => {
-  db = mysql.createConnection(dbConfig); // Recreate the connection
+  handleDisconnect();
   const { category } = req.query;
 
   if (!category) {
@@ -515,7 +515,7 @@ app.get('/getproductsforeditordeletebycategory', (req, res) => {
 // }
 
 app.delete('/delete-product/:id', (req, res) => {
-  db = mysql.createConnection(dbConfig); // Recreate the connection
+  handleDisconnect();
   const productId = req.params.id;
   const sql = 'DELETE FROM PRODUCTS WHERE id = ?';
 
@@ -528,7 +528,7 @@ app.delete('/delete-product/:id', (req, res) => {
 });
 
 app.delete("/deletefromcart/:id/:cartid", (req, res) => {
-  db = mysql.createConnection(dbConfig); // Recreate the connection
+  handleDisconnect();
   const { id, cartid } = req.params;
   console.log('Deleting product with cart id: ', id)
   const del = `DELETE FROM cartItems WHERE id = ? AND cart_id = ?`;
@@ -548,7 +548,7 @@ app.delete("/deletefromcart/:id/:cartid", (req, res) => {
 })
 
 app.get('/topselling', (req, res) => {
-  db = mysql.createConnection(dbConfig); // Recreate the connection
+  handleDisconnect();
   const query = `SELECT * FROM PRODUCTS ORDER BY prod_sold DESC LIMIT 6`;
   db.query(query, (err, result) => {
     if (err) throw err;
@@ -556,7 +556,7 @@ app.get('/topselling', (req, res) => {
   })
 })
 app.get('/lunch', (req, res) => {
-  db = mysql.createConnection(dbConfig); // Recreate the connection
+  handleDisconnect();
   const category = req.query.category; // Get category from query parameters
   const query = `SELECT * FROM PRODUCTS WHERE category = ? LIMIT 6`;
   db.query(query, [category], (err, result) => {
@@ -569,7 +569,7 @@ app.get('/lunch', (req, res) => {
 
 //get orders that have placed by the user
 app.get('/getorders', (req, res) => {
-  db = mysql.createConnection(dbConfig); // Recreate the connection
+  handleDisconnect();
   const { userrid } = req.query;
   const getorder = `WITH last_order AS (
     SELECT o.order_id
@@ -587,7 +587,7 @@ app.get('/getorders', (req, res) => {
   console.log('getting order of order id: ', userrid);
 
   db.query(getorder, [userrid], (err, result) => {
-    db = mysql.createConnection(dbConfig); // Recreate the connection
+    handleDisconnect();
     if (err) {
       res.status(500).json({
         message: 'Error getting order',
@@ -601,7 +601,7 @@ app.get('/getorders', (req, res) => {
 
 
 app.get('/orders', (req, res) => {
-  db = mysql.createConnection(dbConfig); // Recreate the connection
+  handleDisconnect();
   const userid = parseInt(req.query.userid);
 
   // SQL query to get the latest order for a specific user
@@ -631,7 +631,7 @@ app.get('/orders', (req, res) => {
 });
 
 app.get('/getorderedproducts', (req, res) => {
-  db = mysql.createConnection(dbConfig); // Recreate the connection
+  handleDisconnect();
   const { userid } = req.query;
 
   console.log('userid arahi hai ? ', userid);
@@ -665,7 +665,7 @@ WHERE o.order_id = (
 })
 
 app.get('/admin/orders', (req, res) => {
-  db = mysql.createConnection(dbConfig); // Recreate the connection
+  handleDisconnect();
   const getorders = `select o.*,u.name,u.email,d.delivery_address,delivery_city,d.payment_method,d.postal_code,d.phoneNo from Orders o inner join users u on o.id = u.id inner join Delivery d on u.id = d.id`;
   db.query(getorders, (err, result) => {
     if (err) {
@@ -679,7 +679,7 @@ app.get('/admin/orders', (req, res) => {
 
 app.get('/orders/product', (req, res) => {
   const { orderId } = req.query;
-  db = mysql.createConnection(dbConfig); // Recreate the connection
+  handleDisconnect();
   const getallproducts = `select o.order_id,op.quantity,p.name,p.category,p.price,p.imgdata,imgurl from PRODUCTS p inner join orderProducts op on op.id = p.id inner join Orders o on o.order_id = op.order_id where o.order_id = ?`;
   db.query(getallproducts, [orderId], (err, result) => {
     if (err) {
@@ -692,7 +692,7 @@ app.get('/orders/product', (req, res) => {
 })
 
 app.put('/updateProduct', (req, res) => {
-  db = mysql.createConnection(dbConfig); // Recreate the connection
+  handleDisconnect();
   const { id, name, description, category, price, qnty, imgurl } = req.body;
   console.log(id, name, description, category, price, qnty);
   const update = `UPDATE PRODUCTS SET name = ?,description = ?,category = ?,price=?,qnty=?,imgurl=? where id = ?`
