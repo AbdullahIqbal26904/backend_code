@@ -34,8 +34,8 @@ const dbConfig = {
 let db; // Declare db variable globally
 
 function handleDisconnect() {
-  db = mysql.createConnection(dbConfig); // Recreate the connection
   try{
+    db = mysql.createConnection(dbConfig); // Recreate the connection
     console.log('MySql Successfully Connected....');
   }catch(err){
     console.log('Error connecting to MySql....')
