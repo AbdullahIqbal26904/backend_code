@@ -52,7 +52,7 @@ app.post('/products', upload.single('imgdata'), (req, res) => {
   let addProdquery = ``;
   const { name, description, category, price, ratings, qnty, imgdata, imageUrl } = req.body;
   if (imageUrl == "") {
-    addProdquery = `INSERT INTO Products (name, description, category, price, ratings, qnty, imgdata) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+    addProdquery = `INSERT INTO PRODUCTS (name, description, category, price, ratings, qnty, imgdata) VALUES (?, ?, ?, ?, ?, ?, ?)`;
     db.query(addProdquery, [name, description, category, price, ratings, qnty, imgdata], (err, result) => {
       if (err) {
         return res.status(500).send('Error adding product');
@@ -63,7 +63,7 @@ app.post('/products', upload.single('imgdata'), (req, res) => {
   } else {
     const { name, description, category, price, ratings, qnty, imgUrl } = req.body;
 
-    addProdquery = `INSERT INTO Products (name, description, category, price, ratings, qnty, imgurl) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+    addProdquery = `INSERT INTO PRODUCTS (name, description, category, price, ratings, qnty, imgurl) VALUES (?, ?, ?, ?, ?, ?, ?)`;
     db.query(addProdquery, [name, description, category, price, ratings, qnty, imageUrl], (err, result) => {
       if (err) {
         return res.status(500).send('Error adding product');
@@ -183,11 +183,12 @@ app.post("/addtocart", (req, res) => {
           // this means product already exists in the cart
           return res.status(400).json({ message: 'Product is already added in cart.' })
         } else {
-          const addtocartt = `INSERT INTO cartItems (id,cart_id,quantity,total_item_price) VALUES (? , ?, ?,?)`
+          const addtocartt = `INSERT INTO cartItems (id,cart_id,total_item_price,quantity) VALUES (?, ?, ?, ?)`;
           if (cart_id != 0 && product_id != 0) {
-            // console.log('Received data from axios ');
-            db.query(addtocartt, [product_id, cart_id, quantity, price], (err, response) => {
+            console.log('Received data from axios :', cart_id, product_id);
+            db.query(addtocartt, [product_id, cart_id, price, quantity], (err, response) => {
               if (err) {
+                console.log(err);
                 res.status(400).json({ message: 'Server Error' });
               } else {
                 res.json({
@@ -205,8 +206,8 @@ app.post("/addtocart", (req, res) => {
 
 app.get("/getcartdata", (req, res) => {
   const { cart_id } = req.query;
-  const get_query = `SELECT P.*,ci.quantity FROM Products P JOIN cartItems ci ON P.id = ci.id JOIN Cart C ON C.cart_id = ci.cart_id WHERE C.cart_id = ?`;
-  // console.log("fetching data of cart: ", cart_id);
+  const get_query = `SELECT P.*,ci.quantity FROM PRODUCTS P JOIN cartItems ci ON P.id = ci.id JOIN Cart C ON C.cart_id = ci.cart_id WHERE C.cart_id = ?`;
+  console.log("fetching data of cart: ", cart_id);
   db.query(get_query, [cart_id], (err, result) => {
     if (err) {
       console.log('Cannot be fetched.')
@@ -351,7 +352,7 @@ app.delete('/emptycart', (req, res) => {
 
 app.put('/updatestock', (req, res) => {
   const { productid, productquantity } = req.body;
-  const updatestock = `UPDATE Products SET qnty = qnty - ? WHERE id = ?`;
+  const updatestock = `UPDATE PRODUCTS SET qnty = qnty - ? WHERE id = ?`;
   db.query(updatestock, [productquantity, productid], (err, result) => {
     if (err) {
       res.status(500).json({ message: 'Quantity update unsuccessful' });
@@ -369,7 +370,7 @@ app.get('/getCart/:id', (req, res) => {
 
   // Query to fetch the cart for the given user ID
   const getCartQuery = `SELECT * FROM Cart WHERE id = ?`;
-
+  console.log('fetching cart of :', userId);
   db.query(getCartQuery, [userId], (err, cart) => {
     if (err) {
       console.error('Error fetching cart:', err);
@@ -380,7 +381,7 @@ app.get('/getCart/:id', (req, res) => {
     if (cart.length === 0) {
       return res.status(404).json({ message: 'No cart found for this user.' });
     }
-
+    console.log(cart);
     // Send the cart data as the response
     res.json(cart);
   })
@@ -402,7 +403,7 @@ app.get('/productsbyrange', async (req, res) => {
 })
 
 app.get('/getproducts', (req, res) => {
-  const query = 'SELECT * FROM Products';
+  const query = 'SELECT * FROM `PRODUCTS`';
 
   db.query(query, (err, result) => {
     if (err) {
@@ -419,7 +420,7 @@ app.get('/getproductsforeditordelete', (req, res) => {
     return res.status(400).send({ message: 'Product name is required' });
   }
 
-  const query = 'SELECT * FROM Products WHERE name LIKE ?';
+  const query = 'SELECT * FROM PRODUCTS WHERE name LIKE ?';
 
   db.query(query, [`%${name}%`], (err, results) => {
     if (err) {
@@ -443,7 +444,7 @@ app.get('/getproductsforeditordeletebycategory', (req, res) => {
     return res.status(400).send({ message: 'Product name is required' });
   }
 
-  const query = 'SELECT * FROM Products WHERE category LIKE ?';
+  const query = 'SELECT * FROM PRODUCTS WHERE category LIKE ?';
 
   db.query(query, [`%${category}%`], (err, results) => {
     if (err) {
@@ -490,7 +491,7 @@ app.get('/getproductsforeditordeletebycategory', (req, res) => {
 
 app.delete('/delete-product/:id', (req, res) => {
   const productId = req.params.id;
-  const sql = 'DELETE FROM Products WHERE id = ?';
+  const sql = 'DELETE FROM PRODUCTS WHERE id = ?';
 
   db.query(sql, [productId], (err, result) => {
     if (err) {
@@ -520,7 +521,7 @@ app.delete("/deletefromcart/:id/:cartid", (req, res) => {
 })
 
 app.get('/topselling', (req, res) => {
-  const query = `SELECT * FROM Products ORDER BY prod_sold DESC LIMIT 6`;
+  const query = `SELECT * FROM PRODUCTS ORDER BY prod_sold DESC LIMIT 6`;
   db.query(query, (err, result) => {
     if (err) throw err;
     res.send(result);
@@ -528,7 +529,7 @@ app.get('/topselling', (req, res) => {
 })
 app.get('/lunch', (req, res) => {
   const category = req.query.category; // Get category from query parameters
-  const query = `SELECT * FROM Products WHERE category = ? LIMIT 6`;
+  const query = `SELECT * FROM PRODUCTS WHERE category = ? LIMIT 6`;
   db.query(query, [category], (err, result) => {
     if (err) throw err;
     res.send(result);
@@ -551,7 +552,7 @@ app.get('/getorders', (req, res) => {
   )
   SELECT p.*
   FROM orderProducts op
-  INNER JOIN Products p ON op.id = p.id
+  INNER JOIN PRODUCTS p ON op.id = p.id
   WHERE op.order_id = (SELECT order_id FROM last_order)`
   console.log('getting order of order id: ', userrid);
 
@@ -578,7 +579,7 @@ app.get('/orders', (req, res) => {
     INNER JOIN Orders o ON u.id = o.id 
     WHERE u.id = 3 
     ORDER BY o.order_date DESC, o.order_time DESC 
-    LIMIT 1;`;
+    LIMIT 1`;
 
   db.query(query, [userid], (err, result) => {
     if (err) {
@@ -599,11 +600,19 @@ app.get('/orders', (req, res) => {
 
 app.get('/getorderedproducts', (req, res) => {
   const { userid } = req.query;
-  console.log('userid arahi hai ? ',userid);
-  const getproducts = `with orderid as (
-	select o.order_id from users u inner join Orders o on u.id = o.id where u.id = ? order by o.order_date desc,order_time desc limit 1
-) 
-select p.*,op.quantity from orderProducts op inner join Orders o on o.order_id = op.order_id inner join Products p on p.id = op.id where o.order_id in (select * from orderid)`;
+  console.log('userid arahi hai ? ', userid);
+  const getproducts = `SELECT p.*, op.quantity
+FROM orderProducts op
+INNER JOIN Orders o ON o.order_id = op.order_id
+INNER JOIN PRODUCTS p ON p.id = op.id
+WHERE o.order_id = (
+    SELECT o.order_id
+    FROM users u
+    INNER JOIN Orders o ON u.id = o.id
+    WHERE u.id = ?
+    ORDER BY o.order_date DESC, o.order_time DESC
+    LIMIT 1
+)`;
   db.query(getproducts, [userid], (err, result) => {
     if (err) {
       // Handle the error
@@ -613,7 +622,7 @@ select p.*,op.quantity from orderProducts op inner join Orders o on o.order_id =
 
     if (result.length === 0) {
       // No orders found for the specified user
-      return res.status(404).json({ message: 'No products found for this user.' });
+      return res.status(404).json({ message: 'No PRODUCTS found for this user.' });
     }
 
     // Successfully retrieved the latest order
@@ -621,39 +630,39 @@ select p.*,op.quantity from orderProducts op inner join Orders o on o.order_id =
   });
 })
 
-app.get('/admin/orders',(req,res) => {
-  const getorders = `select o.*,u.name,u.email,d.delivery_address,delivery_city,d.payment_method,d.postal_code,d.phoneNo from Orders o inner join users u on o.id = u.id inner join delivery d on u.id = d.id`;
-  db.query(getorders,(err,result) => {
-    if(err){
-      res.status(400).json({message: 'Error fetching products'});
-    }else{
+app.get('/admin/orders', (req, res) => {
+  const getorders = `select o.*,u.name,u.email,d.delivery_address,delivery_city,d.payment_method,d.postal_code,d.phoneNo from Orders o inner join users u on o.id = u.id inner join Delivery d on u.id = d.id`;
+  db.query(getorders, (err, result) => {
+    if (err) {
+      res.status(400).json({ message: 'Error fetching PRODUCTS' });
+    } else {
       console.log(result);
       res.json(result);
     }
   })
 })
 
-app.get('/orders/product',(req,res) => {
-  const {orderId} = req.query;
-  const getallproducts = `select o.order_id,op.quantity,p.name,p.category,p.price,p.imgdata,imgurl from Products p inner join orderProducts op on op.id = p.id inner join orders o on o.order_id = op.order_id where o.order_id = ?`;
-  db.query(getallproducts,[orderId],(err,result) => {
-    if(err){
-      res.status(400).json({message: 'Error fetching products'});
-    }else{
+app.get('/orders/product', (req, res) => {
+  const { orderId } = req.query;
+  const getallproducts = `select o.order_id,op.quantity,p.name,p.category,p.price,p.imgdata,imgurl from PRODUCTS p inner join orderProducts op on op.id = p.id inner join Orders o on o.order_id = op.order_id where o.order_id = ?`;
+  db.query(getallproducts, [orderId], (err, result) => {
+    if (err) {
+      res.status(400).json({ message: 'Error fetching products' });
+    } else {
       console.log(result);
       res.json(result);
     }
   })
 })
 
-app.put('/updateProduct',(req,res) => {
-  const {id,name,description,category,price,qnty,imgurl} = req.body;
-  console.log(id,name,description,category,price,qnty);
-  const update = `UPDATE Products SET name = ?,description = ?,category = ?,price=?,qnty=?,imgurl=? where id = ?`
-  db.query(update,[name,description,category,price,qnty,imgurl,id],(err,result) => {
-    if(err){
+app.put('/updateProduct', (req, res) => {
+  const { id, name, description, category, price, qnty, imgurl } = req.body;
+  console.log(id, name, description, category, price, qnty);
+  const update = `UPDATE PRODUCTS SET name = ?,description = ?,category = ?,price=?,qnty=?,imgurl=? where id = ?`
+  db.query(update, [name, description, category, price, qnty, imgurl, id], (err, result) => {
+    if (err) {
       res.status(404).json(err);
-    }else{
+    } else {
       res.json(result);
     }
   })
