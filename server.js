@@ -609,7 +609,7 @@ app.get('/orders', (req, res) => {
     SELECT o.* 
     FROM users u 
     INNER JOIN Orders o ON u.id = o.id 
-    WHERE u.id = 3 
+    WHERE u.id = ? 
     ORDER BY o.order_date DESC, o.order_time DESC 
     LIMIT 1`;
 
